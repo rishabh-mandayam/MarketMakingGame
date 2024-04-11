@@ -63,19 +63,19 @@ class MarketMaker(Player):
 class History:
     """"
         All past transactions, useful for opponents.
-        TODO!
     """
     def __init__(self):
         self.past_transactions = []
 
-    def update_history(self, response, bid, ask):
+    def update_history(self, round_num, response, bid, ask):
         if (response == Response.HIT):
-            self.past_transactions.append([response, bid])
+            self.past_transactions.append([round_num, response, bid])
         if (response == Response.LIFT):
-            self.past_transactions.append([response, ask])
+            self.past_transactions.append([round_num, response, ask])
 
     def get_history(self):
         return self.past_transactions
+
 
 def parse_quote(quote):
     try:
@@ -156,10 +156,10 @@ if __name__ == "__main__":
 
         ## Present quote to opponents
         for opp in opponents:
-            response = opp.get_action(bid,ask, history)
+            response = opp.get_action(i,bid,ask, history)
             ## Do transaction
             update_mm(market_maker, response, bid, ask)
-            history.update(response, bid, ask)
+            history.update_history(i, response, bid, ask)
             update_opp(opp, response, bid, ask)
             ## Print player
             if(constants.HARD_MODE):
@@ -172,7 +172,7 @@ if __name__ == "__main__":
             print(f"|\tPlayer: {opp.identifier} {response} @ {pp} \t\t Current position: {o_stock}@{o_price}")
 
         print("-" * 47)
-
+        print(history.get_history())
         print("Your stats:\t", market_maker.get_balance(stringify=True))
 
     ## End Game

@@ -37,13 +37,25 @@ class StrategyTemplate(Player):
 
 class BaselineStrat(StrategyTemplate):
     """ Opponent sees fair value as expected value * num players """
+    def get_prev_round(transactions, prev_round):
+        matching_rounds = []
+        for sublist in transactions:
+            if sublist[0] == prev_round:
+                matching_rounds.append(sublist)
+        return matching_rounds
+
     def get_action(
         self,
         bid,
         ask,
-        history : History
+        history : History,
+        round_num
     ) -> Response:
-        fair_value = self.secret * (constants.NUM_OPPONENTS+1)
+        prev_round = round_num - 1
+        if (prev_round == 0):
+            fair_value = self.secret + ((constants.MAX_SECRET - constants.MIN_SECRET)/2)* (constants.NUM_OPPONENTS)
+        else:
+            last_round_transacs = #TODO
         # Opponent will buy if ask is < fair_value
         # and sell if bid is > fair_value. Otherwise, no trade.
         if(ask < fair_value):

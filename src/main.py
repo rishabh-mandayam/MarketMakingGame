@@ -1,16 +1,16 @@
 """
-    In this game, you act as a market maker against four players. Each player (including you) has a number 
+    In this game, you act as a market maker against four players. Each player (including you) has a number
     between 1 and 10 (inclusive) and your job is to make markets on the SUM of the all five numbers.
 
     There are ten rounds of markets, and they happen FAST! So incorporate new information as you receive and quote
-    as quickly as possible before time runs out.  
+    as quickly as possible before time runs out.
 
-    Your quote is sent to all opponents SIMULTANEOUSLY and their response is sent back to you SIMULTANEOUSLY and PUBLICALLY. 
-    This means opponents can see ALL transactions in previous rounds (but not in the current round). 
+    Your quote is sent to all opponents SIMULTANEOUSLY and their response is sent back to you SIMULTANEOUSLY and PUBLICALLY.
+    This means opponents can see ALL transactions in previous rounds (but not in the current round).
 
-    Opponents trade exactly one unit at a time and are allowed to not trade (should your quote be bad). 
+    Opponents trade exactly one unit at a time and are allowed to not trade (should your quote be bad).
 
-    At the end of the game, the numbers are revealed and your score is set. 
+    At the end of the game, the numbers are revealed and your score is set.
 
     Original game: https://github.com/sameerlal/OMakeMeAMarket
 
@@ -33,7 +33,7 @@ class Player:
         ## Attributes Unique to Each Player
         self.identifier = name
         self.secret = random.randrange(constants.MIN_SECRET,constants.MAX_SECRET+1)
-        ## Pnl related        
+        ## Pnl related
         self.cash  = 0 # Current Cash Balance
         self.stock = 0 # Current Stock Balance
         self.pnl   = 0 # Realized pnl
@@ -48,7 +48,7 @@ class Player:
             self.pnl  += self.cash
             self.cash = 0
         return True
-    
+
     def get_balance(self, stringify=False):
         data =  {"cash": self.cash, "stock": self.stock, "pnl": self.pnl}
         if(stringify):
@@ -63,12 +63,19 @@ class MarketMaker(Player):
 class History:
     """"
         All past transactions, useful for opponents.
-        
         TODO!
     """
     def __init__(self):
         self.past_transactions = []
 
+    def update_history(self, response, bid, ask):
+        if (response == Response.HIT):
+            self.past_transactions.append([response, bid])
+        if (response == Response.LIFT):
+            self.past_transactions.append([response, ask])
+
+    def get_history(self):
+        return self.past_transactions
 
 def parse_quote(quote):
     try:
@@ -102,14 +109,14 @@ def update_opp(opp, response, bid, ask):
 if __name__ == "__main__":
     ## Set Up Players
     market_maker = MarketMaker(name="User")
-    opponents = [] 
+    opponents = []
     for opp in range(constants.NUM_OPPONENTS):
         opponents.append( BaselineStrat(f"{opp}") )
     history = History()
 
     ## Preamble
     print("Secret numbers have been assigned!")
-    
+
 
     print(f"There are a total of {constants.NUM_OPPONENTS} opponents and {constants.NUM_ROUNDS} rounds")
     print(f"Secret numbers are between {constants.MIN_SECRET} and {constants.MAX_SECRET} inclusive. ")
@@ -139,9 +146,9 @@ if __name__ == "__main__":
     print("|", " "*spacing2, prompt2 ," "*spacing2, "|")
     print("|", " "*88, "|")
     print("-"*90)
-    
 
-    ## Begin Game 
+
+    ## Begin Game
     for i in range(1, constants.NUM_ROUNDS+1):
         print("\n", "*"*25, f"Round {i}", "*"*25)
         quote = input("Enter a quote>")
@@ -152,6 +159,7 @@ if __name__ == "__main__":
             response = opp.get_action(bid,ask, history)
             ## Do transaction
             update_mm(market_maker, response, bid, ask)
+            history.update(response, bid, ask)
             update_opp(opp, response, bid, ask)
             ## Print player
             if(constants.HARD_MODE):
@@ -162,11 +170,11 @@ if __name__ == "__main__":
                 o_price = opp.cash / abs(o_stock) if o_stock != 0 else 0
             pp =  bid if(response == Response.HIT) else ask if response == Response.LIFT else "--"
             print(f"|\tPlayer: {opp.identifier} {response} @ {pp} \t\t Current position: {o_stock}@{o_price}")
-            
+
         print("-" * 47)
-        
+
         print("Your stats:\t", market_maker.get_balance(stringify=True))
-    
+
     ## End Game
     print("*"*20, "Statistics", "*"*20)
     print("Revealing secret numbers...")
